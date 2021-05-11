@@ -1,0 +1,45 @@
+version: "3"
+
+services:
+  sandbox-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    container_name: sandbox-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 9200
+      - 9300
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      www:
+        ipv4_address: 172.98.0.2
+
+  sandbox-kibana:
+    image: docker.elastic.co/kibana/kibana:7.12.1
+    container_name: sandbox-kibana
+    depends_on:
+      - sandbox-elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://sandbox-elasticsearch:9200
+    ports:
+      - 5601
+    networks:
+      www:
+        ipv4_address: 172.98.0.3
+
+volumes:
+  esdata:
+
+networks:
+  www:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.98.0.0/16
